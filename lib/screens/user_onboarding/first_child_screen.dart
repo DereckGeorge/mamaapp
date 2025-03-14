@@ -86,16 +86,16 @@ class _FirstChildScreenState extends State<FirstChildScreen> {
                     child: ElevatedButton(
                       onPressed: () => _selectOption('Yes'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFCB4172),
+                        backgroundColor: _selectedOption == 'Yes' ? const Color(0xFFCB4172) : const Color(0xFFFAE0E7),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Yes',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: _selectedOption == 'Yes' ? Colors.white : const Color(0xFFCB4172),
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
@@ -110,16 +110,16 @@ class _FirstChildScreenState extends State<FirstChildScreen> {
                     child: ElevatedButton(
                       onPressed: () => _selectOption('No'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFAE0E7),
+                        backgroundColor: _selectedOption == 'No' ? const Color(0xFFCB4172) : const Color(0xFFFAE0E7),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         'No',
                         style: TextStyle(
-                          color: Color(0xFFCB4172),
+                          color: _selectedOption == 'No' ? Colors.white : const Color(0xFFCB4172),
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
