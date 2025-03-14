@@ -3,12 +3,14 @@ import 'package:mamaapp/screens/user_onboarding/summary_screen.dart';
 import 'package:mamaapp/screens/user_onboarding/screens/health_tips_screen.dart';
 import 'package:mamaapp/screens/user_onboarding/screens/symptoms_screen.dart';
 import 'package:mamaapp/screens/user_onboarding/screens/profile_screen.dart';
+import 'package:mamaapp/services/api_service.dart';
 
 class AppBottomNavigation extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
+  final ApiService _apiService = ApiService();
 
-  const AppBottomNavigation({
+  AppBottomNavigation({
     super.key,
     required this.currentIndex,
     required this.onTap,
@@ -68,36 +70,50 @@ class AppBottomNavigation extends StatelessWidget {
     );
   }
 
-  void _navigateToScreen(BuildContext context, int index) {
+  Future<void> _navigateToScreen(BuildContext context, int index) async {
     if (index == currentIndex) return;
     
-    Widget screen;
-    switch (index) {
-      case 0:
-        // We need to get the pregnancy data from the current context
-        // For now, we'll create a dummy instance
-        final pregnancyData = ModalRoute.of(context)?.settings.arguments as dynamic;
-        screen = SummaryScreen(pregnancyData: pregnancyData ?? const {});
-        break;
-      case 1:
-        screen = const HealthTipsScreen();
-        break;
-      case 2:
-        screen = const SymptomsScreen();
-        break;
-      case 3:
-        screen = const ProfileScreen();
-        break;
-      default:
+    Widget? screen;
+    
+    if (index == 0) {
+      // For home button, always get the latest user data
+      try {
+        final user = await _apiService.getUserData();
+        if (user != null && user.pregnancyData != null) {
+          screen = SummaryScreen(pregnancyData: user.pregnancyData!);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Unable to retrieve user data')),
+          );
+          return;
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
         return;
+      }
+    } else {
+      switch (index) {
+        case 1:
+          screen = const HealthTipsScreen();
+          break;
+        case 2:
+          screen = const SymptomsScreen();
+          break;
+        case 3:
+          screen = const ProfileScreen();
+          break;
+      }
     }
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => screen,
-        settings: RouteSettings(arguments: ModalRoute.of(context)?.settings.arguments),
-      ),
-    );
+    if (screen != null && context.mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => screen!,
+        ),
+      );
+    }
   }
 } 
