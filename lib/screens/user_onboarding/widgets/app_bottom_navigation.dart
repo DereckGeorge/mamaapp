@@ -3,12 +3,14 @@ import 'package:mamaapp/screens/home_screen.dart';
 import 'package:mamaapp/screens/user_onboarding/screens/health_tips_screen.dart';
 import 'package:mamaapp/screens/user_onboarding/screens/symptoms_screen.dart';
 import 'package:mamaapp/screens/user_onboarding/screens/profile_screen.dart';
+import 'package:mamaapp/services/api_service.dart';
 
 class AppBottomNavigation extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
+  final ApiService _apiService = ApiService();
 
-  const AppBottomNavigation({
+  AppBottomNavigation({
     super.key,
     required this.currentIndex,
     required this.onTap,
@@ -68,7 +70,7 @@ class AppBottomNavigation extends StatelessWidget {
     );
   }
 
-  void _navigateToScreen(BuildContext context, int index) {
+  Future<void> _navigateToScreen(BuildContext context, int index) async {
     if (index == currentIndex) return;
 
     Widget screen;

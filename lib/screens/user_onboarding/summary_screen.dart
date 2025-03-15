@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mamaapp/models/user_model.dart';
+import 'package:mamaapp/screens/user_onboarding/screens/health_tips_screen.dart';
 import 'package:mamaapp/services/api_service.dart';
 import 'package:mamaapp/screens/home_screen.dart';
 import 'widgets/app_drawer.dart';
@@ -132,7 +133,12 @@ class _SummaryScreenState extends State<SummaryScreen> {
                     iconPath: 'assets/articles_icon.png',
                     color: const Color(0xFFFFE6E6),
                     onTap: () {
-                      // Navigate to articles screen
+                      Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const HealthTipsScreen(),
+                ),
+              );
                     },
                   ),
                   FeatureCard(
