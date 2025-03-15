@@ -35,7 +35,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
       final doctorAppointments = await _reminderService.getDoctorAppointments();
       final medicines = await _reminderService.getMedicines();
       final medicalTests = await _reminderService.getMedicalTests();
-      
+
       setState(() {
         _doctorAppointments = doctorAppointments;
         _medicines = medicines;
@@ -54,6 +54,10 @@ class _RemindersScreenState extends State<RemindersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Get screen size
+    final screenSize = MediaQuery.of(context).size;
+    final padding = screenSize.width < 600 ? 16.0 : 24.0; // Responsive padding
+
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: const Color(0xFFF9F9F9),
@@ -82,62 +86,47 @@ class _RemindersScreenState extends State<RemindersScreen> {
       ),
       drawer: const AppDrawer(),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFCB4172)))
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFFCB4172)))
           : RefreshIndicator(
               onRefresh: _loadReminders,
               color: const Color(0xFFCB4172),
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                child: Container(
-                  margin: const EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Doctor's Appointments Section
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                        child: _buildSectionHeader(
-                          'Doctor\'s appointment',
-                          () => _navigateToAddScreen(const DoctorAppointmentScreen()),
-                        ),
-                      ),
-                      _buildRemindersList(_doctorAppointments),
-                      
-                      const Divider(height: 1),
-                      
-                      // Medicines Section
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                        child: _buildSectionHeader(
-                          'Medicines',
-                          () => _navigateToAddScreen(const MedicineDosageScreen()),
-                        ),
-                      ),
-                      _buildRemindersList(_medicines),
-                      
-                      const Divider(height: 1),
-                      
-                      // Medical Tests Section
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                        child: _buildSectionHeader(
-                          'Medical tests',
-                          () => _navigateToAddScreen(const MedicalTestScreen()),
-                        ),
-                      ),
-                      _buildRemindersList(_medicalTests),
-                    ],
+                child: Padding(
+                  padding: EdgeInsets.all(padding), // Responsive padding
+                  child: LayoutBuilder(
+                    // Add LayoutBuilder for responsive design
+                    builder: (context, constraints) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildReminderSection(
+                            'Doctor\'s appointment',
+                            _doctorAppointments,
+                            () => _navigateToAddScreen(
+                                const DoctorAppointmentScreen()),
+                            constraints,
+                          ),
+                          SizedBox(height: padding), // Responsive spacing
+                          _buildReminderSection(
+                            'Medicines',
+                            _medicines,
+                            () => _navigateToAddScreen(
+                                const MedicineDosageScreen()),
+                            constraints,
+                          ),
+                          SizedBox(height: padding), // Responsive spacing
+                          _buildReminderSection(
+                            'Medical tests',
+                            _medicalTests,
+                            () =>
+                                _navigateToAddScreen(const MedicalTestScreen()),
+                            constraints,
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ),
               ),
@@ -155,29 +144,39 @@ class _RemindersScreenState extends State<RemindersScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: Colors.black87,
-          ),
-        ),
-        TextButton.icon(
-          onPressed: onAddPressed,
-          icon: const Icon(Icons.add, color: Color(0xFFCB4172), size: 18),
-          label: Text(
-            'ADD ${title.toUpperCase()}',
+        Expanded(
+          // Add this to make title flexible
+          child: Text(
+            title,
             style: const TextStyle(
-              color: Color(0xFFCB4172),
+              fontSize: 16,
               fontWeight: FontWeight.w500,
-              fontSize: 12,
+              color: Colors.black87,
             ),
           ),
+        ),
+        TextButton(
+          // Changed from TextButton.icon to TextButton for better control
+          onPressed: onAddPressed,
           style: TextButton.styleFrom(
-            padding: EdgeInsets.zero,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             minimumSize: Size.zero,
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.add, color: Color(0xFFCB4172), size: 16),
+              const SizedBox(width: 4),
+              Text(
+                'ADD', // Simplified text to prevent overflow
+                style: const TextStyle(
+                  color: Color(0xFFCB4172),
+                  fontWeight: FontWeight.w500,
+                  fontSize: 12,
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -191,33 +190,72 @@ class _RemindersScreenState extends State<RemindersScreen> {
         child: Center(
           child: Text(
             'No reminders added yet',
-            style: TextStyle(color: Colors.grey),
+            style: TextStyle(
+              color: Colors.grey,
+              fontSize: 14,
+            ),
           ),
         ),
       );
     }
 
-    return ListView.builder(
+    return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.only(top: 8, bottom: 16),
       itemCount: reminders.length,
+      separatorBuilder: (context, index) => const Divider(height: 1),
       itemBuilder: (context, index) {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Column(
-            children: [
-              ReminderItem(
-                reminder: reminders[index],
-                onDelete: () async {
-                  await _reminderService.deleteReminder(reminders[index].id);
-                  _loadReminders();
-                },
-              ),
-            ],
+          child: ReminderItem(
+            reminder: reminders[index],
+            onDelete: () async {
+              await _reminderService.deleteReminder(reminders[index].id);
+              _loadReminders();
+            },
+            onStatusChanged: (bool newStatus) async {
+              await _reminderService.updateReminderStatus(
+                reminders[index].id,
+                newStatus,
+              );
+              _loadReminders();
+            },
           ),
         );
       },
+    );
+  }
+
+  Widget _buildReminderSection(
+    String title,
+    List<Reminder> reminders,
+    VoidCallback onAddPressed,
+    BoxConstraints constraints,
+  ) {
+    return Container(
+      width: constraints.maxWidth, // Use full available width
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: _buildSectionHeader(title, onAddPressed),
+          ),
+          _buildRemindersList(reminders),
+        ],
+      ),
     );
   }
 
@@ -226,9 +264,9 @@ class _RemindersScreenState extends State<RemindersScreen> {
       context,
       MaterialPageRoute(builder: (context) => screen),
     );
-    
+
     if (result == true) {
       _loadReminders();
     }
   }
-} 
+}

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mamaapp/screens/user_onboarding/summary_screen.dart';
+import 'package:mamaapp/screens/home_screen.dart';
 import 'package:mamaapp/screens/user_onboarding/screens/health_tips_screen.dart';
 import 'package:mamaapp/screens/user_onboarding/screens/symptoms_screen.dart';
 import 'package:mamaapp/screens/user_onboarding/screens/profile_screen.dart';
@@ -70,14 +70,11 @@ class AppBottomNavigation extends StatelessWidget {
 
   void _navigateToScreen(BuildContext context, int index) {
     if (index == currentIndex) return;
-    
+
     Widget screen;
     switch (index) {
       case 0:
-        // We need to get the pregnancy data from the current context
-        // For now, we'll create a dummy instance
-        final pregnancyData = ModalRoute.of(context)?.settings.arguments as dynamic;
-        screen = SummaryScreen(pregnancyData: pregnancyData ?? const {});
+        screen = const HomeScreen();
         break;
       case 1:
         screen = const HealthTipsScreen();
@@ -96,8 +93,7 @@ class AppBottomNavigation extends StatelessWidget {
       context,
       MaterialPageRoute(
         builder: (context) => screen,
-        settings: RouteSettings(arguments: ModalRoute.of(context)?.settings.arguments),
       ),
     );
   }
-} 
+}

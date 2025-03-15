@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/journal_entry.dart';
 import '../services/journal_service.dart';
 import '../widgets/calendar_widget.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
 
 class JournalScreen extends StatefulWidget {
   const JournalScreen({super.key});
@@ -16,6 +18,7 @@ class _JournalScreenState extends State<JournalScreen> {
   List<JournalEntry> _entries = [];
   bool _isLoading = false;
   final String _userId = 'test_user'; // In real app, get from auth service
+  List<JournalEntry> _displayedEntries = [];
 
   @override
   void initState() {
@@ -26,10 +29,40 @@ class _JournalScreenState extends State<JournalScreen> {
   Future<void> _loadEntries() async {
     setState(() => _isLoading = true);
     try {
-      final entries = await _journalService.getEntriesForMonth(_userId, _selectedDate);
-      setState(() => _entries = entries);
+      // Get entries for the month (for calendar display)
+      final monthEntries =
+          await _journalService.getEntriesForMonth(_userId, _selectedDate);
+      // Get entries for the selected date
+      final dateEntries =
+          await _journalService.getEntriesForDate(_selectedDate);
+
+      setState(() {
+        // Keep all month entries for calendar display
+        _entries = monthEntries;
+        // Update displayed entries to show only selected date
+        _displayedEntries = dateEntries;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading journals: $e')),
+        );
+      }
     } finally {
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _deleteEntry(int journalId) async {
+    try {
+      await _journalService.deleteJournal(journalId.toString());
+      _loadEntries(); // Reload the list after deletion
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error deleting journal: $e')),
+        );
+      }
     }
   }
 
@@ -44,10 +77,18 @@ class _JournalScreenState extends State<JournalScreen> {
         builder: (context) => _JournalEntryScreen(
           date: _selectedDate,
           onSave: (content) async {
-            await _journalService.addEntry(_userId, content, _selectedDate);
-            if (mounted) {
-              Navigator.pop(context);
-              _loadEntries();
+            try {
+              await _journalService.addJournal(content);
+              if (mounted) {
+                Navigator.pop(context);
+                _loadEntries(); // Reload the list after adding
+              }
+            } catch (e) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error creating journal: $e')),
+                );
+              }
             }
           },
         ),
@@ -132,25 +173,69 @@ class _JournalScreenState extends State<JournalScreen> {
                     CalendarWidget(
                       selectedDate: _selectedDate,
                       onDateSelected: _onDateSelected,
-                      datesWithEntries: _entries.map((e) => e.date).toList(),
+                      datesWithEntries:
+                          _entries.map((e) => e.createdAt).toList(),
                     ),
+                    const SizedBox(height: 20),
                     if (_isLoading)
                       const Center(child: CircularProgressIndicator())
-                    else if (_entries.isEmpty)
-                      const Center(
+                    else if (_displayedEntries.isEmpty)
+                      Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            SizedBox(height: 40),
+                            const SizedBox(height: 40),
                             Text(
-                              'No Journal Records',
-                              style: TextStyle(
+                              'No entries for ${DateFormat('MMMM dd, yyyy').format(_selectedDate)}',
+                              style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
                         ),
+                      )
+                    else
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _displayedEntries.length,
+                        itemBuilder: (context, index) {
+                          final entry = _displayedEntries[index];
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    entry.formattedDate,
+                                    style: const TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(entry.content),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      TextButton(
+                                        onPressed: () => _deleteEntry(entry.id),
+                                        child: const Text(
+                                          'Delete',
+                                          style: TextStyle(color: Colors.red),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
                       ),
                   ],
                 ),
@@ -221,13 +306,7 @@ class _JournalScreenState extends State<JournalScreen> {
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
                                   TextButton(
-                                    onPressed: () async {
-                                      await _journalService.deleteEntry(
-                                        _userId,
-                                        entry.id,
-                                      );
-                                      _loadEntries();
-                                    },
+                                    onPressed: () => _deleteEntry(entry.id),
                                     child: const Text(
                                       'Delete',
                                       style: TextStyle(color: Colors.red),
@@ -268,11 +347,17 @@ class _JournalEntryScreen extends StatefulWidget {
 
 class _JournalEntryScreenState extends State<_JournalEntryScreen> {
   final _contentController = TextEditingController();
+  bool _isSaving = false;
 
-  @override
-  void dispose() {
-    _contentController.dispose();
-    super.dispose();
+  Future<void> _saveEntry() async {
+    if (_contentController.text.isEmpty) return;
+
+    setState(() => _isSaving = true);
+    try {
+      await widget.onSave(_contentController.text);
+    } finally {
+      setState(() => _isSaving = false);
+    }
   }
 
   @override
@@ -291,18 +376,24 @@ class _JournalEntryScreenState extends State<_JournalEntryScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () {
-              if (_contentController.text.isNotEmpty) {
-                widget.onSave(_contentController.text);
-              }
-            },
-            child: const Text(
-              'Save',
-              style: TextStyle(
-                color: Color(0xFFCB4172),
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            onPressed: _isSaving ? null : _saveEntry,
+            child: _isSaving
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFFCB4172)),
+                    ),
+                  )
+                : const Text(
+                    'Save',
+                    style: TextStyle(
+                      color: Color(0xFFCB4172),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
           ),
         ],
       ),
@@ -329,4 +420,4 @@ class _JournalEntryScreenState extends State<_JournalEntryScreen> {
       ),
     );
   }
-} 
+}

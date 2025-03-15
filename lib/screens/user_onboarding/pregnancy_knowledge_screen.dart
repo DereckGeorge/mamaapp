@@ -6,14 +6,19 @@ import 'package:mamaapp/screens/user_onboarding/pregnancy_info_screen.dart';
 
 class PregnancyKnowledgeScreen extends StatefulWidget {
   final UserPregnancyData pregnancyData;
+  final bool isFirstChild;
+  final String ageGroup;
 
   const PregnancyKnowledgeScreen({
     super.key,
     required this.pregnancyData,
+    required this.isFirstChild,
+    required this.ageGroup,
   });
 
   @override
-  State<PregnancyKnowledgeScreen> createState() => _PregnancyKnowledgeScreenState();
+  State<PregnancyKnowledgeScreen> createState() =>
+      _PregnancyKnowledgeScreenState();
 }
 
 class _PregnancyKnowledgeScreenState extends State<PregnancyKnowledgeScreen> {
@@ -23,29 +28,41 @@ class _PregnancyKnowledgeScreenState extends State<PregnancyKnowledgeScreen> {
     setState(() {
       _selectedOption = option;
     });
-    
+
     // Continue to next screen after selection
     _continueToNextScreen(option);
   }
 
   void _continueToNextScreen(String option) {
     final updatedPregnancyData = widget.pregnancyData.copyWith();
-    
+
     Widget nextScreen;
     switch (option) {
       case 'First day of the cycle':
-        nextScreen = CycleDateScreen(pregnancyData: updatedPregnancyData);
+        nextScreen = CycleDateScreen(
+          pregnancyData: updatedPregnancyData,
+          isFirstChild: widget.isFirstChild,
+          ageGroup: widget.ageGroup,
+        );
         break;
       case 'Gestational period':
-        nextScreen = GestationalPeriodScreen(pregnancyData: updatedPregnancyData);
+        nextScreen = GestationalPeriodScreen(
+          pregnancyData: updatedPregnancyData,
+          isFirstChild: widget.isFirstChild,
+          ageGroup: widget.ageGroup,
+        );
         break;
       case 'Expected due date':
-        nextScreen = PregnancyInfoScreen(pregnancyData: updatedPregnancyData);
+        nextScreen = PregnancyInfoScreen(
+          pregnancyData: updatedPregnancyData,
+          isFirstChild: widget.isFirstChild,
+          ageGroup: widget.ageGroup,
+        );
         break;
       default:
         return; // Don't navigate if no valid option is selected
     }
-    
+
     Navigator.of(context).push(
       MaterialPageRoute(builder: (context) => nextScreen),
     );
@@ -77,7 +94,7 @@ class _PregnancyKnowledgeScreenState extends State<PregnancyKnowledgeScreen> {
                 ),
               ),
             ),
-            
+
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
@@ -93,7 +110,7 @@ class _PregnancyKnowledgeScreenState extends State<PregnancyKnowledgeScreen> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 40),
-                  
+
                   // Option buttons
                   _buildOptionButton(
                     'First day of the cycle',
@@ -117,24 +134,24 @@ class _PregnancyKnowledgeScreenState extends State<PregnancyKnowledgeScreen> {
       ),
     );
   }
-  
+
   Widget _buildOptionButton(
     String label, {
     bool isSelected = false,
     bool isPrimary = false,
   }) {
-    final backgroundColor = isPrimary 
-        ? const Color(0xFFCB4172) 
-        : isSelected 
-            ? const Color(0xFFCB4172) 
+    final backgroundColor = isPrimary
+        ? const Color(0xFFCB4172)
+        : isSelected
+            ? const Color(0xFFCB4172)
             : const Color(0xFFFAE0E7);
-    
-    final textColor = isPrimary 
-        ? Colors.white 
-        : isSelected 
-            ? Colors.white 
+
+    final textColor = isPrimary
+        ? Colors.white
+        : isSelected
+            ? Colors.white
             : const Color(0xFFCB4172);
-    
+
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
@@ -175,4 +192,4 @@ class _PregnancyKnowledgeScreenState extends State<PregnancyKnowledgeScreen> {
       ),
     );
   }
-} 
+}

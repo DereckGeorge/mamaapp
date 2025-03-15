@@ -5,14 +5,19 @@ import 'package:mamaapp/screens/user_onboarding/pregnancy_info_screen.dart';
 
 class GestationalPeriodScreen extends StatefulWidget {
   final UserPregnancyData pregnancyData;
+  final bool isFirstChild;
+  final String ageGroup;
 
   const GestationalPeriodScreen({
     super.key,
     required this.pregnancyData,
+    required this.isFirstChild,
+    required this.ageGroup,
   });
 
   @override
-  State<GestationalPeriodScreen> createState() => _GestationalPeriodScreenState();
+  State<GestationalPeriodScreen> createState() =>
+      _GestationalPeriodScreenState();
 }
 
 class _GestationalPeriodScreenState extends State<GestationalPeriodScreen> {
@@ -22,13 +27,13 @@ class _GestationalPeriodScreenState extends State<GestationalPeriodScreen> {
   void _continueToNextScreen() {
     // Calculate total days pregnant
     final totalDays = (_selectedWeeks * 7) + _selectedDays;
-    
+
     // Calculate due date based on gestational age
     final dueDate = DateTime.now().add(Duration(days: 280 - totalDays));
-    
+
     // Calculate weeks pregnant
     final weeksPregnant = _selectedWeeks;
-    
+
     // Determine pregnancy stage
     String pregnancyStage = 'First trimester';
     if (weeksPregnant >= 13 && weeksPregnant < 27) {
@@ -36,16 +41,21 @@ class _GestationalPeriodScreenState extends State<GestationalPeriodScreen> {
     } else if (weeksPregnant >= 27) {
       pregnancyStage = 'Third trimester';
     }
-    
+
     final updatedPregnancyData = widget.pregnancyData.copyWith(
       dueDate: dueDate,
       weeksPregnant: weeksPregnant,
       pregnancyStage: pregnancyStage,
+      gestationalPeriod: _selectedWeeks,
     );
-    
+
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => PregnancyInfoScreen(pregnancyData: updatedPregnancyData),
+        builder: (context) => PregnancyInfoScreen(
+          pregnancyData: updatedPregnancyData,
+          isFirstChild: widget.isFirstChild,
+          ageGroup: widget.ageGroup,
+        ),
       ),
     );
   }
@@ -76,7 +86,7 @@ class _GestationalPeriodScreenState extends State<GestationalPeriodScreen> {
                 ),
               ),
             ),
-            
+
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
@@ -100,7 +110,7 @@ class _GestationalPeriodScreenState extends State<GestationalPeriodScreen> {
                       ),
                     ),
                     const SizedBox(height: 30),
-                    
+
                     // Gestational Period Picker
                     Expanded(
                       child: Row(
@@ -126,7 +136,8 @@ class _GestationalPeriodScreenState extends State<GestationalPeriodScreen> {
                                         _selectedWeeks = index;
                                       });
                                     },
-                                    children: List<Widget>.generate(42, (index) {
+                                    children:
+                                        List<Widget>.generate(42, (index) {
                                       return Center(
                                         child: Text(
                                           '$index',
@@ -182,9 +193,9 @@ class _GestationalPeriodScreenState extends State<GestationalPeriodScreen> {
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 20),
-                    
+
                     // Continue Button
                     SizedBox(
                       width: double.infinity,
@@ -216,4 +227,4 @@ class _GestationalPeriodScreenState extends State<GestationalPeriodScreen> {
       ),
     );
   }
-} 
+}

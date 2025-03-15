@@ -17,11 +17,11 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'],
-      name: json['name'],
+      id: json['id'].toString(),
+      name: json['username'] ?? json['name'],
       email: json['email'],
-      phone: json['phone'],
-      isFirstTimeUser: json['isFirstTimeUser'] ?? true,
+      phone: json['phone_number'],
+      isFirstTimeUser: json['is_first_time_user'] ?? true,
       pregnancyData: json['pregnancyData'] != null
           ? UserPregnancyData.fromJson(json['pregnancyData'])
           : null,
@@ -61,31 +61,39 @@ class User {
 class UserPregnancyData {
   final DateTime dueDate;
   final int weeksPregnant;
-  final String pregnancyStage; 
+  final String pregnancyStage;
   final List<String> symptoms;
   final List<String> healthConditions;
   final bool isFirstChild;
   final String? babyGender;
+  final DateTime? firstDayCircle;
+  final int? gestationalPeriod;
 
   UserPregnancyData({
     required this.dueDate,
-    required this.weeksPregnant,
-    required this.pregnancyStage,
+    this.weeksPregnant = 0,
+    this.pregnancyStage = 'First trimester',
     this.symptoms = const [],
     this.healthConditions = const [],
     this.isFirstChild = true,
     this.babyGender,
+    this.firstDayCircle,
+    this.gestationalPeriod,
   });
 
   factory UserPregnancyData.fromJson(Map<String, dynamic> json) {
     return UserPregnancyData(
       dueDate: DateTime.parse(json['dueDate']),
-      weeksPregnant: json['weeksPregnant'],
-      pregnancyStage: json['pregnancyStage'],
+      weeksPregnant: json['weeksPregnant'] ?? 0,
+      pregnancyStage: json['pregnancyStage'] ?? 'First trimester',
       symptoms: List<String>.from(json['symptoms'] ?? []),
       healthConditions: List<String>.from(json['healthConditions'] ?? []),
       isFirstChild: json['isFirstChild'] ?? true,
       babyGender: json['babyGender'],
+      firstDayCircle: json['firstDayCircle'] != null
+          ? DateTime.parse(json['firstDayCircle'])
+          : null,
+      gestationalPeriod: json['gestationalPeriod'],
     );
   }
 
@@ -98,6 +106,8 @@ class UserPregnancyData {
       'healthConditions': healthConditions,
       'isFirstChild': isFirstChild,
       'babyGender': babyGender,
+      'firstDayCircle': firstDayCircle?.toIso8601String(),
+      'gestationalPeriod': gestationalPeriod,
     };
   }
 
@@ -109,6 +119,8 @@ class UserPregnancyData {
     List<String>? healthConditions,
     bool? isFirstChild,
     String? babyGender,
+    DateTime? firstDayCircle,
+    int? gestationalPeriod,
   }) {
     return UserPregnancyData(
       dueDate: dueDate ?? this.dueDate,
@@ -118,6 +130,8 @@ class UserPregnancyData {
       healthConditions: healthConditions ?? this.healthConditions,
       isFirstChild: isFirstChild ?? this.isFirstChild,
       babyGender: babyGender ?? this.babyGender,
+      firstDayCircle: firstDayCircle ?? this.firstDayCircle,
+      gestationalPeriod: gestationalPeriod ?? this.gestationalPeriod,
     );
   }
-} 
+}

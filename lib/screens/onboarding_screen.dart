@@ -34,7 +34,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     OnboardingItem(
       image: 'assets/medicine.png',
       title: '',
-      description: 'Caring for you and your little one every step of the way. Explore health tips, expert advice and nearby healthcare services for a safer and healthier journey to motherhood!',
+      description:
+          'Caring for you and your little one every step of the way. Explore health tips, expert advice and nearby healthcare services for a safer and healthier journey to motherhood!',
     ),
   ];
 
@@ -63,7 +64,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     await SharedPreferencesService.setHasSeenOnboarding(true);
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const FirstChildScreen()),
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
     );
   }
 
@@ -103,9 +104,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 16),
-                        Text(
-                          _items[_items.length - 1].description,
-                          style: const TextStyle(
+                        const Text(
+                          'Caring for you and your little one every step of the way. '
+                          'Explore health tips, expert advice and nearby healthcare '
+                          'services for a safer and healthier journey to motherhood!',
+                          style: TextStyle(
                             fontSize: 16,
                             color: Colors.grey,
                             fontWeight: FontWeight.normal,
@@ -222,7 +225,6 @@ class OnboardingPage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 40),
-            
             if (item.title.isNotEmpty) ...[
               Text(
                 item.title.replaceAllMapped(
@@ -238,7 +240,6 @@ class OnboardingPage extends StatelessWidget {
               ),
               const SizedBox(height: 24),
             ],
-            
             SizedBox(
               height: MediaQuery.of(context).size.height * 0.4,
               child: Image.asset(
@@ -246,8 +247,6 @@ class OnboardingPage extends StatelessWidget {
                 fit: BoxFit.contain,
               ),
             ),
-            
-            
             if (item.description.isNotEmpty) ...[
               const SizedBox(height: 16),
               Text(
@@ -264,4 +263,4 @@ class OnboardingPage extends StatelessWidget {
       ),
     );
   }
-} 
+}

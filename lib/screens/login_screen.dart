@@ -5,6 +5,7 @@ import 'package:mamaapp/screens/register_screen.dart';
 import 'package:mamaapp/screens/home_screen.dart';
 import 'package:mamaapp/screens/user_onboarding/pregnancy_info_screen.dart';
 import 'package:mamaapp/models/user_model.dart';
+import 'package:mamaapp/screens/user_onboarding/first_child_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -42,30 +43,19 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (!mounted) return;
 
-        // Check if user is first time user
-        if (user.isFirstTimeUser) {
-          // Navigate to pregnancy info screen
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (context) => PregnancyInfoScreen(
-                pregnancyData: UserPregnancyData(
-                  dueDate: DateTime.now().add(const Duration(days: 280)),
-                  weeksPregnant: 0,
-                  pregnancyStage: 'First trimester',
-                ),
-              ),
-            ),
-          );
-        } else {
-          // Navigate to home screen
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
-          );
-        }
+        // Navigate to FirstChildScreen
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const FirstChildScreen(),
+          ),
+        );
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Login failed: $e')),
+            SnackBar(
+              content: Text(e.toString().replaceAll('Exception: ', '')),
+              backgroundColor: Colors.red,
+            ),
           );
         }
       } finally {
@@ -107,9 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               ),
             ),
-            
             const SizedBox(height: 20),
-            
             Expanded(
               child: Container(
                 width: double.infinity,
@@ -145,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 24),
-                        
+
                         // Login Illustration
                         Center(
                           child: Image.asset(
@@ -154,7 +142,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 24),
-                        
+
                         // Email Field
                         Container(
                           decoration: BoxDecoration(
@@ -166,7 +154,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             decoration: const InputDecoration(
                               hintText: 'Enter your email',
                               border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 16),
                             ),
                             keyboardType: TextInputType.emailAddress,
                             validator: (value) {
@@ -178,7 +167,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        
+
                         // Password Field
                         Container(
                           decoration: BoxDecoration(
@@ -190,7 +179,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             decoration: const InputDecoration(
                               hintText: 'Enter your password',
                               border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 16),
                             ),
                             obscureText: true,
                             validator: (value) {
@@ -201,7 +191,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             },
                           ),
                         ),
-                        
+
                         // Forgot Password
                         Align(
                           alignment: Alignment.center,
@@ -218,7 +208,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                         ),
-                        
+
                         // Sign In Button
                         ElevatedButton(
                           onPressed: _isLoading ? null : _login,
@@ -248,7 +238,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                         ),
                         const SizedBox(height: 16),
-                        
+
                         // Register Link
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -262,7 +252,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             GestureDetector(
                               onTap: () {
                                 Navigator.of(context).pushReplacement(
-                                  MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          const RegisterScreen()),
                                 );
                               },
                               child: const Text(
@@ -286,4 +278,4 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-} 
+}

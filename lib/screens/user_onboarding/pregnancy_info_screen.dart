@@ -7,10 +7,14 @@ import 'package:mamaapp/screens/user_onboarding/gender_selection_screen.dart';
 
 class PregnancyInfoScreen extends StatefulWidget {
   final UserPregnancyData pregnancyData;
-  
+  final bool isFirstChild;
+  final String ageGroup;
+
   const PregnancyInfoScreen({
-    super.key, 
+    super.key,
     required this.pregnancyData,
+    required this.isFirstChild,
+    required this.ageGroup,
   });
 
   @override
@@ -20,8 +24,18 @@ class PregnancyInfoScreen extends StatefulWidget {
 class _PregnancyInfoScreenState extends State<PregnancyInfoScreen> {
   late DateTime _selectedDate;
   final List<String> _months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December'
   ];
 
   @override
@@ -31,29 +45,18 @@ class _PregnancyInfoScreenState extends State<PregnancyInfoScreen> {
   }
 
   void _continueToNextScreen() {
-    // Calculate weeks pregnant based on due date
-    final difference = _selectedDate.difference(DateTime.now()).inDays;
-    final totalPregnancyDays = 280; // 40 weeks
-    final daysPregnant = totalPregnancyDays - difference;
-    final weeksPregnant = (daysPregnant / 7).floor();
-    
-    // Determine pregnancy stage
-    String pregnancyStage = 'First trimester';
-    if (weeksPregnant >= 13 && weeksPregnant < 27) {
-      pregnancyStage = 'Second trimester';
-    } else if (weeksPregnant >= 27) {
-      pregnancyStage = 'Third trimester';
-    }
-
     final updatedPregnancyData = widget.pregnancyData.copyWith(
       dueDate: _selectedDate,
-      weeksPregnant: weeksPregnant,
-      pregnancyStage: pregnancyStage,
     );
-    
+
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => GenderSelectionScreen(pregnancyData: updatedPregnancyData),
+        builder: (context) => GenderSelectionScreen(
+          pregnancyData: updatedPregnancyData,
+          isFirstChild: widget.isFirstChild,
+          ageGroup: widget.ageGroup,
+          dueDate: _selectedDate,
+        ),
       ),
     );
   }
@@ -84,7 +87,7 @@ class _PregnancyInfoScreenState extends State<PregnancyInfoScreen> {
                 ),
               ),
             ),
-            
+
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
@@ -108,7 +111,7 @@ class _PregnancyInfoScreenState extends State<PregnancyInfoScreen> {
                       ),
                     ),
                     const SizedBox(height: 30),
-                    
+
                     // Date Picker
                     Expanded(
                       child: Row(
@@ -139,7 +142,8 @@ class _PregnancyInfoScreenState extends State<PregnancyInfoScreen> {
                                         );
                                       });
                                     },
-                                    children: List<Widget>.generate(31, (index) {
+                                    children:
+                                        List<Widget>.generate(31, (index) {
                                       return Center(
                                         child: Text(
                                           '${index + 1}',
@@ -242,9 +246,9 @@ class _PregnancyInfoScreenState extends State<PregnancyInfoScreen> {
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 20),
-                    
+
                     // Continue Button
                     SizedBox(
                       width: double.infinity,
@@ -276,4 +280,4 @@ class _PregnancyInfoScreenState extends State<PregnancyInfoScreen> {
       ),
     );
   }
-} 
+}

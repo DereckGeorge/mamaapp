@@ -2,6 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:mamaapp/models/user_model.dart';
 import 'package:mamaapp/services/api_service.dart';
 import 'package:intl/intl.dart';
+import 'package:mamaapp/screens/user_onboarding/screens/reminders_screen.dart';
+import 'package:mamaapp/screens/user_onboarding/widgets/app_bottom_navigation.dart';
+import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+import 'package:mamaapp/screens/login_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -44,17 +51,75 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _logout() async {
+  Future<void> _handleLogout() async {
     try {
-      await _apiService.logout();
-      // Navigate back to login screen
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      final userId = prefs.getString('user_id');
+      final baseUrl = dotenv.env['APP_BASE_URL'] ?? '';
+
+      if (token == null || userId == null) {
+        // If no token or userId, just clear preferences and return to login
+        await prefs.clear();
+        if (mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+            (route) => false,
+          );
+        }
+        return;
+      }
+
+      // Call the logout API with user_id in the URL
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/auth/logout/$userId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
+
+      // Clear preferences regardless of response
+      await prefs.clear();
+
       if (mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+        if (response.statusCode == 200) {
+          // Navigate to login screen and remove all previous routes
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+            (route) => false,
+          );
+        } else {
+          // Show error but still navigate to login since we've cleared the token
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Logout error: ${jsonDecode(response.body)['message'] ?? 'Unknown error'}',
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+            (route) => false,
+          );
+        }
       }
     } catch (e) {
+      // Handle any errors, clear preferences, and return to login
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error logging out: $e')),
+          SnackBar(
+            content: Text('Error during logout: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (route) => false,
         );
       }
     }
@@ -87,7 +152,31 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout, color: Color(0xFFCB4172)),
-            onPressed: _logout,
+            onPressed: () {
+              // Show confirmation dialog before logout
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text('Confirm Logout'),
+                    content: const Text('Are you sure you want to logout?'),
+                    actions: <Widget>[
+                      TextButton(
+                        child: const Text('Cancel'),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                      TextButton(
+                        child: const Text('Logout'),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          _handleLogout();
+                        },
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
           ),
         ],
       ),
@@ -115,12 +204,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         const SizedBox(height: 24),
-                        
                         if (_user!.pregnancyData != null) ...[
                           _buildPregnancyCard(_user!.pregnancyData!),
                           const SizedBox(height: 24),
                         ],
-
                         const Text(
                           'Features',
                           style: TextStyle(
@@ -129,7 +216,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-
                         GridView.count(
                           crossAxisCount: 2,
                           shrinkWrap: true,
@@ -163,6 +249,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
+      bottomNavigationBar: AppBottomNavigation(
+        currentIndex: 0,
+        onTap: (index) {
+          // Handle navigation
+        },
+      ),
     );
   }
 
@@ -188,7 +280,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: const Color(0xFFCB4172),
                   borderRadius: BorderRadius.circular(20),
@@ -204,10 +297,11 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          _buildInfoRow('Due Date', DateFormat('MMM dd, yyyy').format(pregnancyData.dueDate)),
+          _buildInfoRow('Due Date',
+              DateFormat('MMM dd, yyyy').format(pregnancyData.dueDate)),
           _buildInfoRow('Stage', pregnancyData.pregnancyStage),
-          
-          if (pregnancyData.symptoms.isNotEmpty && pregnancyData.symptoms.first != 'None of the above') ...[
+          if (pregnancyData.symptoms.isNotEmpty &&
+              pregnancyData.symptoms.first != 'None of the above') ...[
             const SizedBox(height: 8),
             const Text(
               'Current Symptoms:',
@@ -222,7 +316,8 @@ class _HomeScreenState extends State<HomeScreen> {
               runSpacing: 8,
               children: pregnancyData.symptoms.map((symptom) {
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
@@ -275,10 +370,18 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildFeatureCard(String title, IconData icon, String description) {
     return InkWell(
       onTap: () {
-        // TODO: Navigate to feature screen
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$title feature coming soon!')),
-        );
+        if (title == 'Appointments') {
+          // Check if it's the appointments card
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const RemindersScreen()),
+          );
+        } else {
+          // Keep the existing fallback for other features
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('$title feature coming soon!')),
+          );
+        }
       },
       borderRadius: BorderRadius.circular(16),
       child: Container(
@@ -318,4 +421,4 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-} 
+}

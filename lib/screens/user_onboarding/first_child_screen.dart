@@ -16,7 +16,7 @@ class _FirstChildScreenState extends State<FirstChildScreen> {
     setState(() {
       _selectedOption = option;
     });
-    
+
     // Continue to next screen after selection
     _continueToNextScreen();
   }
@@ -24,15 +24,18 @@ class _FirstChildScreenState extends State<FirstChildScreen> {
   void _continueToNextScreen() {
     // Create initial pregnancy data
     final pregnancyData = UserPregnancyData(
-      dueDate: DateTime.now().add(const Duration(days: 280)), // Default due date
+      dueDate: DateTime.now().add(const Duration(days: 280)),
       weeksPregnant: 0,
       pregnancyStage: 'First trimester',
       isFirstChild: _selectedOption == 'Yes',
     );
-    
+
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => AgeSelectionScreen(pregnancyData: pregnancyData),
+        builder: (context) => AgeSelectionScreen(
+          pregnancyData: pregnancyData,
+          isFirstChild: _selectedOption == 'Yes',
+        ),
       ),
     );
   }
@@ -63,7 +66,7 @@ class _FirstChildScreenState extends State<FirstChildScreen> {
                 ),
               ),
             ),
-            
+
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
@@ -79,7 +82,7 @@ class _FirstChildScreenState extends State<FirstChildScreen> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 40),
-                  
+
                   // Yes button
                   SizedBox(
                     width: double.infinity,
@@ -103,7 +106,7 @@ class _FirstChildScreenState extends State<FirstChildScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // No button
                   SizedBox(
                     width: double.infinity,
@@ -134,4 +137,4 @@ class _FirstChildScreenState extends State<FirstChildScreen> {
       ),
     );
   }
-} 
+}

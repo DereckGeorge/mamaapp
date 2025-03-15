@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 
 enum ReminderType {
   doctorAppointment,
@@ -8,70 +9,80 @@ enum ReminderType {
 
 class Reminder {
   final String id;
-  final String title;
-  final DateTime date;
-  final TimeOfDay time;
-  final ReminderType type;
-  final bool isActive;
-  final Map<String, dynamic>? additionalData;
+  final String type;
+  final String? appointment;
+  final DateTime reminderTime;
+  final String? doseUnit;
+  final Map<String, dynamic>? medicineDetails;
+  final bool status;
 
   Reminder({
     required this.id,
-    required this.title,
-    required this.date,
-    required this.time,
     required this.type,
-    this.isActive = true,
-    this.additionalData,
+    this.appointment,
+    required this.reminderTime,
+    this.doseUnit,
+    this.medicineDetails,
+    required this.status,
   });
 
-  String get formattedDate {
-    final day = date.day;
-    final month = _getMonthName(date.month);
-    final year = date.year;
-    return '$day $month $year';
+  String get title {
+    switch (type) {
+      case "doctor's appointment":
+        return appointment ?? 'Doctor Appointment';
+      case "medicine":
+        if (medicineDetails != null && medicineDetails!['name'] != null) {
+          return medicineDetails!['name'];
+        }
+        return 'Medicine';
+      case "medical tests":
+        return appointment ?? 'Medical Test';
+      default:
+        return 'Reminder';
+    }
   }
 
-  String get formattedTime {
-    final hour = time.hour.toString().padLeft(2, '0');
-    final minute = time.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
-  }
-
-  String _getMonthName(int month) {
-    const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
-    ];
-    return months[month - 1];
+  String get subtitle {
+    switch (type) {
+      case "medicine":
+        if (medicineDetails != null) {
+          List<String> details = [];
+          if (medicineDetails!['dose'] != null) {
+            details.add('${medicineDetails!['dose']} $doseUnit');
+          }
+          // Add any other medicine details you want to display
+          return details.join(' • ');
+        }
+        return '';
+      default:
+        return '';
+    }
   }
 
   factory Reminder.fromJson(Map<String, dynamic> json) {
     return Reminder(
-      id: json['id'],
-      title: json['title'],
-      date: DateTime.parse(json['date']),
-      time: TimeOfDay(
-        hour: int.parse(json['time'].split(':')[0]),
-        minute: int.parse(json['time'].split(':')[1]),
-      ),
-      type: ReminderType.values.firstWhere(
-        (e) => e.toString() == 'ReminderType.${json['type']}',
-      ),
-      isActive: json['isActive'] ?? true,
-      additionalData: json['additionalData'],
+      id: json['id'].toString(),
+      type: json['type'],
+      appointment: json['appointment'],
+      reminderTime: DateTime.parse(json['reminder_time']),
+      doseUnit: json['dose_unit'],
+      medicineDetails: json['medicine_details'] != null
+          ? jsonDecode(json['medicine_details'])
+          : null,
+      status: json['status'] ?? false,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'title': title,
-      'date': date.toIso8601String(),
-      'time': '${time.hour}:${time.minute}',
-      'type': type.toString().split('.').last,
-      'isActive': isActive,
-      'additionalData': additionalData,
+      'type': type,
+      'appointment': appointment,
+      'reminder_time': reminderTime.toIso8601String(),
+      'dose_unit': doseUnit,
+      'medicine_details':
+          medicineDetails != null ? jsonEncode(medicineDetails) : null,
+      'status': status,
     };
   }
-} 
+}

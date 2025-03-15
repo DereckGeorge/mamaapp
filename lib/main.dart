@@ -7,8 +7,18 @@ import 'package:mamaapp/screens/user_onboarding/pregnancy_info_screen.dart';
 import 'package:mamaapp/services/shared_preferences_service.dart';
 import 'package:mamaapp/services/api_service.dart';
 import 'package:mamaapp/models/user_model.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    await dotenv.load();
+    print("Environment variables loaded successfully.");
+  } catch (e) {
+    print("Error loading .env file: $e");
+  }
+
   runApp(const MyApp());
 }
 
@@ -30,12 +40,14 @@ class MyApp extends StatelessWidget {
         '/register': (context) => const RegisterScreen(),
         '/home': (context) => const HomeScreen(),
         '/pregnancy_info': (context) => PregnancyInfoScreen(
-          pregnancyData: UserPregnancyData(
-            dueDate: DateTime.now().add(const Duration(days: 280)),
-            weeksPregnant: 0,
-            pregnancyStage: 'First trimester',
-          ),
-        ),
+              pregnancyData: UserPregnancyData(
+                dueDate: DateTime.now().add(const Duration(days: 280)),
+                weeksPregnant: 0,
+                pregnancyStage: 'First trimester',
+              ),
+              isFirstChild: true,
+              ageGroup: '25-34 years old',
+            ),
       },
     );
   }
@@ -67,7 +79,7 @@ class _AppInitializerState extends State<AppInitializer> {
         _isLoading = false;
       });
       return;
-      
+
       // Original code (commented out for testing)
       /*
       // Check if user has seen onboarding
@@ -129,4 +141,4 @@ class _AppInitializerState extends State<AppInitializer> {
 
     return _nextScreen!;
   }
-} 
+}

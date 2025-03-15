@@ -4,10 +4,12 @@ import 'package:mamaapp/screens/user_onboarding/pregnancy_knowledge_screen.dart'
 
 class AgeSelectionScreen extends StatefulWidget {
   final UserPregnancyData pregnancyData;
+  final bool isFirstChild;
 
   const AgeSelectionScreen({
     super.key,
     required this.pregnancyData,
+    required this.isFirstChild,
   });
 
   @override
@@ -21,16 +23,18 @@ class _AgeSelectionScreenState extends State<AgeSelectionScreen> {
     setState(() {
       _selectedAgeRange = ageRange;
     });
-    
+
     _continueToNextScreen();
   }
 
   void _continueToNextScreen() {
-    final updatedPregnancyData = widget.pregnancyData.copyWith();
-    
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => PregnancyKnowledgeScreen(pregnancyData: updatedPregnancyData),
+        builder: (context) => PregnancyKnowledgeScreen(
+          pregnancyData: widget.pregnancyData,
+          isFirstChild: widget.isFirstChild,
+          ageGroup: _selectedAgeRange!,
+        ),
       ),
     );
   }
@@ -61,7 +65,7 @@ class _AgeSelectionScreenState extends State<AgeSelectionScreen> {
                 ),
               ),
             ),
-            
+
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
@@ -77,7 +81,7 @@ class _AgeSelectionScreenState extends State<AgeSelectionScreen> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 40),
-                  
+
                   // Age range buttons
                   _buildAgeRangeButton('18-24 years old'),
                   const SizedBox(height: 16),
@@ -94,18 +98,17 @@ class _AgeSelectionScreenState extends State<AgeSelectionScreen> {
       ),
     );
   }
-  
+
   Widget _buildAgeRangeButton(String ageRange) {
     final isSelected = _selectedAgeRange == ageRange;
-    
+
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
         onPressed: () => _selectAgeRange(ageRange),
         style: ElevatedButton.styleFrom(
-          backgroundColor: isSelected 
-              ? const Color(0xFFCB4172) 
-              : const Color(0xFFFAE0E7),
+          backgroundColor:
+              isSelected ? const Color(0xFFCB4172) : const Color(0xFFFAE0E7),
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
@@ -122,4 +125,4 @@ class _AgeSelectionScreenState extends State<AgeSelectionScreen> {
       ),
     );
   }
-} 
+}

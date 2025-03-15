@@ -33,7 +33,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
 
     try {
       await _apiService.updatePregnancyData(widget.pregnancyData);
-      
+
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const HomeScreen()),
@@ -170,4 +170,4 @@ class _SummaryScreenState extends State<SummaryScreen> {
       ),
     );
   }
-} 
+}

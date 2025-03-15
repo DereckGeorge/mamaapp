@@ -6,10 +6,14 @@ import 'package:mamaapp/screens/user_onboarding/pregnancy_info_screen.dart';
 
 class CycleDateScreen extends StatefulWidget {
   final UserPregnancyData pregnancyData;
+  final bool isFirstChild;
+  final String ageGroup;
 
   const CycleDateScreen({
     super.key,
     required this.pregnancyData,
+    required this.isFirstChild,
+    required this.ageGroup,
   });
 
   @override
@@ -19,8 +23,18 @@ class CycleDateScreen extends StatefulWidget {
 class _CycleDateScreenState extends State<CycleDateScreen> {
   late DateTime _selectedDate;
   final List<String> _months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December'
   ];
 
   @override
@@ -30,37 +44,17 @@ class _CycleDateScreenState extends State<CycleDateScreen> {
   }
 
   void _continueToNextScreen() {
-    // Calculate due date based on first day of last period
-    // Naegele's rule: Add 1 year, subtract 3 months, add 7 days
-    final dueDate = DateTime(
-      _selectedDate.year + 1,
-      _selectedDate.month - 3,
-      _selectedDate.day + 7,
-    );
-    
-    // Calculate weeks pregnant
-    final difference = dueDate.difference(DateTime.now()).inDays;
-    final totalPregnancyDays = 280; // 40 weeks
-    final daysPregnant = totalPregnancyDays - difference;
-    final weeksPregnant = (daysPregnant / 7).floor();
-    
-    // Determine pregnancy stage
-    String pregnancyStage = 'First trimester';
-    if (weeksPregnant >= 13 && weeksPregnant < 27) {
-      pregnancyStage = 'Second trimester';
-    } else if (weeksPregnant >= 27) {
-      pregnancyStage = 'Third trimester';
-    }
-    
     final updatedPregnancyData = widget.pregnancyData.copyWith(
-      dueDate: dueDate,
-      weeksPregnant: weeksPregnant,
-      pregnancyStage: pregnancyStage,
+      firstDayCircle: _selectedDate,
     );
-    
+
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => PregnancyInfoScreen(pregnancyData: updatedPregnancyData),
+        builder: (context) => PregnancyInfoScreen(
+          pregnancyData: updatedPregnancyData,
+          isFirstChild: widget.isFirstChild,
+          ageGroup: widget.ageGroup,
+        ),
       ),
     );
   }
@@ -90,7 +84,6 @@ class _CycleDateScreenState extends State<CycleDateScreen> {
                 ),
               ),
             ),
-            
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
@@ -114,7 +107,7 @@ class _CycleDateScreenState extends State<CycleDateScreen> {
                       ),
                     ),
                     const SizedBox(height: 30),
-                    
+
                     // Date Picker
                     Expanded(
                       child: Row(
@@ -202,7 +195,7 @@ class _CycleDateScreenState extends State<CycleDateScreen> {
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 20),
 
                     SizedBox(
@@ -235,4 +228,4 @@ class _CycleDateScreenState extends State<CycleDateScreen> {
       ),
     );
   }
-} 
+}

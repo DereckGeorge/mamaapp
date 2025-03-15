@@ -1,35 +1,29 @@
 import 'package:intl/intl.dart';
 
 class JournalEntry {
-  final String id;
+  final int id;
   final String content;
-  final DateTime date;
-  final String userId;
+  final int userId;
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
   JournalEntry({
     required this.id,
     required this.content,
-    required this.date,
     required this.userId,
+    required this.createdAt,
+    required this.updatedAt,
   });
 
   factory JournalEntry.fromJson(Map<String, dynamic> json) {
     return JournalEntry(
-      id: json['id'] as String,
-      content: json['content'] as String,
-      date: DateTime.parse(json['date'] as String),
-      userId: json['userId'] as String,
+      id: json['id'],
+      content: json['content'],
+      userId: json['user_id'],
+      createdAt: DateTime.parse(json['created_at']),
+      updatedAt: DateTime.parse(json['updated_at']),
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'content': content,
-      'date': date.toIso8601String(),
-      'userId': userId,
-    };
-  }
-
-  String get formattedDate => DateFormat('MMMM dd, yyyy').format(date);
-} 
+  String get formattedDate => DateFormat('MMMM dd, yyyy').format(createdAt);
+}
