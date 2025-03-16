@@ -25,7 +25,27 @@ class SummaryScreen extends StatefulWidget {
 class _SummaryScreenState extends State<SummaryScreen> {
   final ApiService _apiService = ApiService();
   bool _isLoading = false;
+  String _userName = '';
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      final userData = await _apiService.getUserData();
+      if (userData != null) {
+        setState(() {
+          _userName = userData.name;
+        });
+      }
+    } catch (e) {
+      print('Error loading user data: $e');
+    }
+  }
 
   Future<void> _saveAndContinue() async {
     setState(() {
@@ -87,8 +107,8 @@ class _SummaryScreenState extends State<SummaryScreen> {
                 children: [
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
+                    children: [
+                      const Text(
                         'Welcome,',
                         style: TextStyle(
                           fontSize: 16,
@@ -96,8 +116,8 @@ class _SummaryScreenState extends State<SummaryScreen> {
                         ),
                       ),
                       Text(
-                        'Marilyne Swai',
-                        style: TextStyle(
+                        _userName.isEmpty ? 'User' : _userName,
+                        style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
