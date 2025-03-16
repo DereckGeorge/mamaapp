@@ -4,6 +4,8 @@ import 'package:mamaapp/screens/user_onboarding/screens/health_tips_screen.dart'
 import 'package:mamaapp/screens/user_onboarding/screens/symptoms_screen.dart';
 import 'package:mamaapp/screens/user_onboarding/screens/profile_screen.dart';
 import 'package:mamaapp/services/api_service.dart';
+import 'package:mamaapp/models/user_model.dart';
+import 'package:mamaapp/screens/user_onboarding/summary_screen.dart';
 
 class AppBottomNavigation extends StatelessWidget {
   final int currentIndex;
@@ -73,10 +75,43 @@ class AppBottomNavigation extends StatelessWidget {
   Future<void> _navigateToScreen(BuildContext context, int index) async {
     if (index == currentIndex) return;
 
-    Widget screen;
+    Widget? screen;
+    
     switch (index) {
       case 0:
-        screen = const HomeScreen();
+        // For home tab, get user data and navigate to SummaryScreen
+        try {
+          final userData = await _apiService.getUserData();
+          if (userData != null && userData.pregnancyData != null) {
+            screen = SummaryScreen(
+              pregnancyData: userData.pregnancyData!,
+            );
+          } else {
+            // Create default pregnancy data if none exists
+            final defaultPregnancyData = UserPregnancyData(
+              dueDate: DateTime.now().add(const Duration(days: 280)),
+              weeksPregnant: 0,
+              pregnancyStage: 'First trimester',
+              isFirstChild: true,
+            );
+            
+            screen = SummaryScreen(
+              pregnancyData: defaultPregnancyData,
+            );
+          }
+        } catch (e) {
+          // Create default pregnancy data on error
+          final defaultPregnancyData = UserPregnancyData(
+            dueDate: DateTime.now().add(const Duration(days: 280)),
+            weeksPregnant: 0,
+            pregnancyStage: 'First trimester',
+            isFirstChild: true,
+          );
+          
+          screen = SummaryScreen(
+            pregnancyData: defaultPregnancyData,
+          );
+        }
         break;
       case 1:
         screen = const HealthTipsScreen();
@@ -91,11 +126,13 @@ class AppBottomNavigation extends StatelessWidget {
         return;
     }
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => screen,
-      ),
-    );
+    if (screen != null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => screen!,
+        ),
+      );
+    }
   }
 }
