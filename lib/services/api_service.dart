@@ -49,6 +49,9 @@ class ApiService {
         await prefs.setString('token', responseData['access_token']);
         await prefs.setBool('isLoggedIn', true);
 
+        // Also set the login state in SharedPreferencesService for better persistence
+        await SharedPreferencesService.setHasLoggedIn(true);
+
         // Store user data
         final userData = responseData['user'];
         await prefs.setString('user_id', userData['id'].toString());
@@ -56,7 +59,7 @@ class ApiService {
         await prefs.setString('email', userData['email'] ?? '');
         await prefs.setString('phone_number', userData['phone_number'] ?? '');
         await prefs.setBool(
-            'is_first_time_user', userData['is_first_time_user'] ?? true);
+            'is_first_time_user', userData['is_first_time_user'] ?? false); // Set to false to avoid onboarding
 
         // Print stored data
         print('\n--- Stored User Data ---');
@@ -75,7 +78,7 @@ class ApiService {
           name: userData['username'],
           email: userData['email'] ?? '',
           phone: userData['phone_number'],
-          isFirstTimeUser: userData['is_first_time_user'] ?? true,
+          isFirstTimeUser: false, // Set to false to avoid onboarding
         );
 
         await _saveUserData();
