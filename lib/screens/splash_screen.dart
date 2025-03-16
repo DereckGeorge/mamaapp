@@ -19,7 +19,8 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkFirstTime() async {
-    await SharedPreferencesService.resetPreferences();
+    // Remove the resetPreferences call to maintain user's onboarding status
+    // await SharedPreferencesService.resetPreferences();
     
     await Future.delayed(const Duration(seconds: 5));
     if (!mounted) return;
@@ -35,6 +36,8 @@ class _SplashScreenState extends State<SplashScreen> {
         MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
     } else {
+      // If user has seen onboarding and is logged in, navigate to SummaryScreen
+      // This will be handled by the AppInitializer, so we don't need to do anything here
     }
   }
 

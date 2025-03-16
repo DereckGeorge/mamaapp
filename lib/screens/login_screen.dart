@@ -6,6 +6,7 @@ import 'package:mamaapp/screens/home_screen.dart';
 import 'package:mamaapp/screens/user_onboarding/pregnancy_info_screen.dart';
 import 'package:mamaapp/models/user_model.dart';
 import 'package:mamaapp/screens/user_onboarding/first_child_screen.dart';
+import 'package:mamaapp/screens/user_onboarding/summary_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -43,12 +44,26 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (!mounted) return;
 
-        // Navigate to FirstChildScreen
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => const FirstChildScreen(),
-          ),
-        );
+        // Get user data including pregnancy information
+        final userData = await _apiService.getUserData();
+        
+        if (userData != null && userData.pregnancyData != null) {
+          // Navigate to SummaryScreen with pregnancy data
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => SummaryScreen(
+                pregnancyData: userData.pregnancyData!,
+              ),
+            ),
+          );
+        } else {
+          // If no pregnancy data, go to FirstChildScreen to start onboarding
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => const FirstChildScreen(),
+            ),
+          );
+        }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

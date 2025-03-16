@@ -4,6 +4,7 @@ import 'package:mamaapp/screens/login_screen.dart';
 import 'package:mamaapp/screens/register_screen.dart';
 import 'package:mamaapp/screens/home_screen.dart';
 import 'package:mamaapp/screens/user_onboarding/pregnancy_info_screen.dart';
+import 'package:mamaapp/screens/user_onboarding/summary_screen.dart';
 import 'package:mamaapp/services/shared_preferences_service.dart';
 import 'package:mamaapp/services/api_service.dart';
 import 'package:mamaapp/models/user_model.dart';
@@ -73,15 +74,6 @@ class _AppInitializerState extends State<AppInitializer> {
 
   Future<void> _checkLoginStatus() async {
     try {
-      // For testing purposes, always start from splash screen
-      _nextScreen = const SplashScreen();
-      setState(() {
-        _isLoading = false;
-      });
-      return;
-
-      // Original code (commented out for testing)
-      /*
       // Check if user has seen onboarding
       final hasSeenOnboarding = await SharedPreferencesService.getHasSeenOnboarding();
       if (!hasSeenOnboarding) {
@@ -106,20 +98,23 @@ class _AppInitializerState extends State<AppInitializer> {
       final user = await _apiService.getUserData();
       if (user == null) {
         _nextScreen = const LoginScreen();
-      } else if (user.isFirstTimeUser) {
-        _nextScreen = PregnancyInfoScreen(
-          pregnancyData: UserPregnancyData(
-            dueDate: DateTime.now().add(const Duration(days: 280)),
-            weeksPregnant: 0,
-            pregnancyStage: 'First trimester',
-          ),
-        );
       } else {
-        _nextScreen = const HomeScreen();
+        // User is logged in and has data, go directly to SummaryScreen
+        // Create default pregnancy data if none exists
+        final pregnancyData = user.pregnancyData ?? UserPregnancyData(
+          dueDate: DateTime.now().add(const Duration(days: 280)),
+          weeksPregnant: 0,
+          pregnancyStage: 'First trimester',
+          isFirstChild: true,
+        );
+        
+        _nextScreen = SummaryScreen(
+          pregnancyData: pregnancyData,
+        );
       }
-      */
     } catch (e) {
-      _nextScreen = const SplashScreen(); // Changed to SplashScreen for testing
+      print('Error during app initialization: $e');
+      _nextScreen = const LoginScreen();
     } finally {
       setState(() {
         _isLoading = false;

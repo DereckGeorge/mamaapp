@@ -55,6 +55,11 @@ class _GenderSelectionScreenState extends State<GenderSelectionScreen> {
         gestationalPeriod: widget.gestationalPeriod,
       );
 
+      // Update pregnancy data with selected gender
+      final updatedPregnancyData = widget.pregnancyData.copyWith(
+        babyGender: _selectedGender,
+      );
+
       if (!mounted) return;
 
       // Show success message
@@ -65,10 +70,12 @@ class _GenderSelectionScreenState extends State<GenderSelectionScreen> {
         ),
       );
 
-      // Navigate to home screen or summary screen
+      // Navigate to SummaryScreen instead of HomeScreen
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
+          builder: (context) => SummaryScreen(
+            pregnancyData: updatedPregnancyData,
+          ),
         ),
         (route) => false,
       );
