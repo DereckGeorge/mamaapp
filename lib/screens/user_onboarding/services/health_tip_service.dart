@@ -1,9 +1,90 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/health_tip_model.dart';
 
 class HealthTipService {
-  // Mock data for categories
-  final List<HealthTipCategory> _categories = [
+  // Get base URL from environment variables
+  String get baseUrl {
+    final url = dotenv.env['APP_BASE_URL'];
+    if (url == null) {
+      throw Exception('APP_BASE_URL not found in environment variables');
+    }
+    return url;
+  }
+
+  // Fetch categories from API
+  Future<List<HealthTipCategory>> getCategories() async {
+    try {
+      // First try to fetch from API
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/health-tip-categories'),
+      ).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((json) => HealthTipCategory.fromJson(json)).toList();
+      }
+    } catch (e) {
+      print('Error fetching categories from API: $e');
+      // If API fails, fall back to mock data
+    }
+
+    // Return mock data as fallback
+    await Future.delayed(const Duration(milliseconds: 500)); // Simulate network delay
+    return _mockCategories;
+  }
+
+  // Fetch tips by category from API
+  Future<List<HealthTip>> getTipsByCategory(String categoryId) async {
+    try {
+      // First try to fetch from API
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/health-tips?category_id=$categoryId'),
+      ).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((json) => HealthTip.fromJson(json)).toList();
+      }
+    } catch (e) {
+      print('Error fetching tips from API: $e');
+      // If API fails, fall back to mock data
+    }
+
+    // Return mock data as fallback
+    await Future.delayed(const Duration(milliseconds: 500)); // Simulate network delay
+    return _mockHealthTips.where((tip) => tip.categoryId == categoryId).toList();
+  }
+
+  // Fetch tip by ID from API
+  Future<HealthTip?> getTipById(String tipId) async {
+    try {
+      // First try to fetch from API
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/health-tips/$tipId'),
+      ).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final dynamic data = json.decode(response.body);
+        return HealthTip.fromJson(data);
+      }
+    } catch (e) {
+      print('Error fetching tip from API: $e');
+      // If API fails, fall back to mock data
+    }
+
+    // Return mock data as fallback
+    await Future.delayed(const Duration(milliseconds: 500)); // Simulate network delay
+    return _mockHealthTips.firstWhere(
+      (tip) => tip.id == tipId,
+      orElse: () => _mockHealthTips.first,
+    );
+  }
+
+  // Mock data for categories (fallback)
+  final List<HealthTipCategory> _mockCategories = [
     HealthTipCategory(
       id: 'postpartum-care',
       name: 'Postpartum care',
@@ -42,8 +123,8 @@ class HealthTipService {
     ),
   ];
 
-  // Mock data for health tips
-  final List<HealthTip> _healthTips = [
+  // Mock data for health tips (fallback)
+  final List<HealthTip> _mockHealthTips = [
     HealthTip(
       id: 'featured-tip-1',
       categoryId: 'nutrition-tips',
@@ -348,40 +429,33 @@ Remember that every birth is unique. Being informed and prepared while remaining
     ),
   ];
 
-  // Get all categories
-  Future<List<HealthTipCategory>> getCategories() async {
-    // Simulate API delay
-    await Future.delayed(const Duration(milliseconds: 800));
-    return _categories;
-  }
-
-  // Get health tips by category
-  Future<List<HealthTip>> getTipsByCategory(String categoryId) async {
-    await Future.delayed(const Duration(milliseconds: 800));
-    return _healthTips.where((tip) => tip.categoryId == categoryId).toList();
-  }
-
   // Get featured health tips
   Future<List<HealthTip>> getFeaturedTips() async {
-    await Future.delayed(const Duration(milliseconds: 800));
-    return _healthTips.where((tip) => tip.isFeatured).toList();
-  }
-
-  // Get health tip by ID
-  Future<HealthTip?> getTipById(String tipId) async {
-    await Future.delayed(const Duration(milliseconds: 500));
     try {
-      return _healthTips.firstWhere((tip) => tip.id == tipId);
+      // First try to fetch from API
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/health-tips/featured'),
+      ).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((json) => HealthTip.fromJson(json)).toList();
+      }
     } catch (e) {
-      return null;
+      print('Error fetching featured tips from API: $e');
+      // If API fails, fall back to mock data
     }
+
+    // Return mock data as fallback
+    await Future.delayed(const Duration(milliseconds: 500)); // Simulate network delay
+    return _mockHealthTips.where((tip) => tip.isFeatured).toList();
   }
 
   // Search health tips
   Future<List<HealthTip>> searchTips(String query) async {
     await Future.delayed(const Duration(milliseconds: 800));
     final lowercaseQuery = query.toLowerCase();
-    return _healthTips.where((tip) {
+    return _mockHealthTips.where((tip) {
       return tip.title.toLowerCase().contains(lowercaseQuery) ||
           tip.summary.toLowerCase().contains(lowercaseQuery) ||
           tip.content.toLowerCase().contains(lowercaseQuery);
