@@ -8,6 +8,8 @@ import '../widgets/app_bottom_navigation.dart';
 import 'edit_profile_screen.dart';
 import 'package:mamaapp/services/api_service.dart';
 import 'package:mamaapp/screens/login_screen.dart';
+import 'package:mamaapp/screens/user_onboarding/screens/downloads_screen.dart';
+import 'package:mamaapp/screens/user_onboarding/screens/health_progress_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -284,7 +286,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               icon: Icons.favorite_border,
               title: 'Health Progress',
               onTap: () {
-                // Navigate to health progress screen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const HealthProgressScreen(),
+                  ),
+                );
               },
             ),
 
@@ -292,7 +299,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               icon: Icons.download_outlined,
               title: 'Downloads',
               onTap: () {
-                // Navigate to downloads screen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DownloadsScreen(),
+                  ),
+                );
               },
             ),
 

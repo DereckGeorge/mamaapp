@@ -21,10 +21,11 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _checkFirstTime() async {
     // Remove the resetPreferences call to maintain user's onboarding status
     // await SharedPreferencesService.resetPreferences();
-    
+
     await Future.delayed(const Duration(seconds: 5));
     if (!mounted) return;
-    final hasSeenOnboarding = await SharedPreferencesService.getHasSeenOnboarding();
+    final hasSeenOnboarding =
+        await SharedPreferencesService.getHasSeenOnboarding();
     final hasLoggedIn = await SharedPreferencesService.getHasLoggedIn();
 
     if (!hasSeenOnboarding) {
@@ -68,4 +69,4 @@ class _SplashScreenState extends State<SplashScreen> {
       ),
     );
   }
-} 
+}

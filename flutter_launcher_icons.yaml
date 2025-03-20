@@ -1,0 +1,9 @@
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/pinklogo.png"
+  adaptive_icon_background: "#CB4172"
+  adaptive_icon_foreground: "assets/pinklogo.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true
+  adaptive_icon_mask: true 

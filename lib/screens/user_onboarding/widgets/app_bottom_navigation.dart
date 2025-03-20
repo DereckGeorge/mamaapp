@@ -6,6 +6,7 @@ import 'package:mamaapp/screens/user_onboarding/screens/profile_screen.dart';
 import 'package:mamaapp/services/api_service.dart';
 import 'package:mamaapp/models/user_model.dart';
 import 'package:mamaapp/screens/user_onboarding/summary_screen.dart';
+import 'package:mamaapp/screens/user_onboarding/screens/ai_symptoms_screen.dart';
 
 class AppBottomNavigation extends StatelessWidget {
   final int currentIndex;
@@ -76,7 +77,7 @@ class AppBottomNavigation extends StatelessWidget {
     if (index == currentIndex) return;
 
     Widget? screen;
-    
+
     switch (index) {
       case 0:
         // For home tab, get user data and navigate to SummaryScreen
@@ -94,7 +95,7 @@ class AppBottomNavigation extends StatelessWidget {
               pregnancyStage: 'First trimester',
               isFirstChild: true,
             );
-            
+
             screen = SummaryScreen(
               pregnancyData: defaultPregnancyData,
             );
@@ -107,7 +108,7 @@ class AppBottomNavigation extends StatelessWidget {
             pregnancyStage: 'First trimester',
             isFirstChild: true,
           );
-          
+
           screen = SummaryScreen(
             pregnancyData: defaultPregnancyData,
           );
@@ -117,7 +118,7 @@ class AppBottomNavigation extends StatelessWidget {
         screen = const HealthTipsScreen();
         break;
       case 2:
-        screen = const SymptomsScreen();
+        screen = const AISymptomsScreen();
         break;
       case 3:
         screen = const ProfileScreen();

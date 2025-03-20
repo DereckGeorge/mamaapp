@@ -46,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
         // Get user data including pregnancy information
         final userData = await _apiService.getUserData();
-        
+
         if (userData != null && userData.pregnancyData != null) {
           // Navigate to SummaryScreen with pregnancy data
           Navigator.of(context).pushReplacement(

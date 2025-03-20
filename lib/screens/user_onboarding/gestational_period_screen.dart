@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:mamaapp/models/user_model.dart';
 import 'package:mamaapp/screens/user_onboarding/pregnancy_info_screen.dart';
+import 'package:mamaapp/screens/user_onboarding/expected_due_date_screen.dart';
 
 class GestationalPeriodScreen extends StatefulWidget {
   final UserPregnancyData pregnancyData;
@@ -28,9 +29,6 @@ class _GestationalPeriodScreenState extends State<GestationalPeriodScreen> {
     // Calculate total days pregnant
     final totalDays = (_selectedWeeks * 7) + _selectedDays;
 
-    // Calculate due date based on gestational age
-    final dueDate = DateTime.now().add(Duration(days: 280 - totalDays));
-
     // Calculate weeks pregnant
     final weeksPregnant = _selectedWeeks;
 
@@ -43,7 +41,6 @@ class _GestationalPeriodScreenState extends State<GestationalPeriodScreen> {
     }
 
     final updatedPregnancyData = widget.pregnancyData.copyWith(
-      dueDate: dueDate,
       weeksPregnant: weeksPregnant,
       pregnancyStage: pregnancyStage,
       gestationalPeriod: _selectedWeeks,
@@ -51,7 +48,7 @@ class _GestationalPeriodScreenState extends State<GestationalPeriodScreen> {
 
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => PregnancyInfoScreen(
+        builder: (context) => ExpectedDueDateScreen(
           pregnancyData: updatedPregnancyData,
           isFirstChild: widget.isFirstChild,
           ageGroup: widget.ageGroup,

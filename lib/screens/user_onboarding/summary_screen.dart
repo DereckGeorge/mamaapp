@@ -9,6 +9,7 @@ import 'widgets/app_bottom_navigation.dart';
 import 'widgets/pregnancy_progress_card.dart';
 import 'widgets/feature_card.dart';
 import 'screens/reminders_screen.dart';
+import 'screens/health_progress_screen.dart';
 
 class SummaryScreen extends StatefulWidget {
   final UserPregnancyData pregnancyData;
@@ -154,11 +155,11 @@ class _SummaryScreenState extends State<SummaryScreen> {
                     color: const Color(0xFFFFE6E6),
                     onTap: () {
                       Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const HealthTipsScreen(),
-                ),
-              );
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const HealthTipsScreen(),
+                        ),
+                      );
                     },
                   ),
                   FeatureCard(
@@ -166,7 +167,12 @@ class _SummaryScreenState extends State<SummaryScreen> {
                     iconPath: 'assets/progress_icon.png',
                     color: const Color(0xFFFFE6E6),
                     onTap: () {
-                      // Navigate to progress screen
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const HealthProgressScreen(),
+                        ),
+                      );
                     },
                   ),
                   FeatureCard(

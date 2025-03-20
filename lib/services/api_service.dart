@@ -5,6 +5,9 @@ import 'package:mamaapp/services/shared_preferences_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mamaapp/models/query_log_model.dart';
+import 'dart:math';
+import 'package:mamaapp/models/health_model.dart';
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
@@ -16,6 +19,15 @@ class ApiService {
     final url = dotenv.env['APP_BASE_URL'];
     if (url == null) {
       throw Exception('APP_BASE_URL not found in environment variables');
+    }
+    return url;
+  }
+
+  // Get AI base URL from environment variables
+  String get aiBaseUrl {
+    final url = dotenv.env['AI_BASE_URL'];
+    if (url == null || url.isEmpty) {
+      throw Exception('AI_BASE_URL is not configured in .env file');
     }
     return url;
   }
@@ -59,7 +71,9 @@ class ApiService {
         await prefs.setString('email', userData['email'] ?? '');
         await prefs.setString('phone_number', userData['phone_number'] ?? '');
         await prefs.setBool(
-            'is_first_time_user', userData['is_first_time_user'] ?? false); // Set to false to avoid onboarding
+            'is_first_time_user',
+            userData['is_first_time_user'] ??
+                false); // Set to false to avoid onboarding
 
         // Print stored data
         print('\n--- Stored User Data ---');
@@ -424,6 +438,244 @@ class ApiService {
     } catch (e) {
       print('Store mama data error: $e');
       rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> queryAI(String message) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      final phoneNumber = prefs.getString('phone_number');
+
+      print('Debug API Request:');
+      print('URL: $aiBaseUrl/api/query');
+      print('Token: ${token?.substring(0, min(20, token?.length ?? 0))}...');
+      print('Phone Number: $phoneNumber');
+      print('Message: $message');
+
+      final response = await http.post(
+        Uri.parse('$aiBaseUrl/api/query'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode({
+          'text': message,
+          'phone_number': phoneNumber,
+          'response_format': 'text',
+          'voice': 'alloy',
+        }),
+      );
+
+      print('Debug API Response:');
+      print('Status Code: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('Parsed Response Data: $data');
+        return {
+          'text_response': data['text_response'] ?? 'No response available',
+          'audio_url': data['audio_url'] ?? '',
+        };
+      } else {
+        print('Error Response: ${response.body}');
+        throw Exception('Failed to get AI response: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('API Error: $e');
+      throw Exception('Error: $e');
+    }
+  }
+
+  Future<List<QueryLog>> getConversationHistory(String phoneNumber,
+      {int limit = 10, int skip = 0}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+
+      print('Debug API Request - Conversation History:');
+      print('URL: $aiBaseUrl/api/text/$phoneNumber');
+      print('Token: ${token?.substring(0, min(20, token?.length ?? 0))}...');
+      print('Phone Number: $phoneNumber');
+      print('Limit: $limit, Skip: $skip');
+
+      final response = await http.get(
+        Uri.parse('$aiBaseUrl/api/text/$phoneNumber?limit=$limit&skip=$skip'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
+
+      print('Debug API Response - Conversation History:');
+      print('Status Code: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        print('Parsed Response Data: $data');
+        return data.map((json) => QueryLog.fromJson(json)).toList();
+      } else {
+        print('Error Response: ${response.body}');
+        throw Exception(
+            'Failed to load conversation history: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('API Error: $e');
+      throw Exception('Error: $e');
+    }
+  }
+
+  Future<HealthAnalysis> analyzeHealth(String phoneNumber) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+
+      print('\n=== Health Analysis API Call ===');
+      print('Endpoint: $aiBaseUrl/api/health/health/$phoneNumber');
+      print('Method: POST');
+      print('Headers:');
+      print('  - Authorization: Bearer [token]');
+      print('  - Accept: application/json');
+
+      final response = await http.post(
+        Uri.parse('$aiBaseUrl/api/health/health/$phoneNumber'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
+
+      print('Response Status: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return HealthAnalysis.fromJson(data);
+      } else {
+        throw Exception('Failed to analyze health: ${response.body}');
+      }
+    } catch (e) {
+      print('Error analyzing health: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<HealthAnalysisLog>> getHealthHistory(String phoneNumber) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+
+      print('\n=== Health History API Call ===');
+      print('Endpoint: $aiBaseUrl/api/health/health/$phoneNumber');
+      print('Method: GET');
+      print('Headers:');
+      print('  - Authorization: Bearer [token]');
+      print('  - Accept: application/json');
+
+      final response = await http.get(
+        Uri.parse('$aiBaseUrl/api/health/health/$phoneNumber'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
+
+      print('Response Status: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+
+        // Check if data is empty
+        if (data.isEmpty) {
+          print('Warning: API returned empty array');
+          return [];
+        }
+
+        // Sort the data by timestamp in descending order (newest first)
+        data.sort((a, b) => DateTime.parse(b['timestamp'])
+            .compareTo(DateTime.parse(a['timestamp'])));
+
+        return data
+            .map((log) {
+              try {
+                return HealthAnalysisLog.fromJson(log);
+              } catch (e) {
+                print('Error parsing health log: $e');
+                print('Invalid log data: $log');
+                return null;
+              }
+            })
+            .whereType<HealthAnalysisLog>()
+            .toList();
+      } else {
+        print('Error: API returned status code ${response.statusCode}');
+        print('Response body: ${response.body}');
+        return [];
+      }
+    } catch (e) {
+      print('Error getting health history: $e');
+      print('Stack trace: ${StackTrace.current}');
+      return [];
+    }
+  }
+
+  Future<String> getHealthAudioSummary(String phoneNumber) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+
+      final response = await http.get(
+        Uri.parse('$aiBaseUrl/audio/$phoneNumber'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['audio_url'];
+      } else {
+        throw Exception('Failed to get audio summary: ${response.body}');
+      }
+    } catch (e) {
+      print('Error getting audio summary: $e');
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> getMamaData(int userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/mama-data/$userId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${await getToken()}',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else if (response.statusCode == 404) {
+        return {
+          'status': 'error',
+          'message': 'Mama data not found',
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': 'Failed to load mama data',
+        };
+      }
+    } catch (e) {
+      return {
+        'status': 'error',
+        'message': 'Error connecting to server: $e',
+      };
     }
   }
 }

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/app_bottom_navigation.dart';
-import '../models/health_tip_model.dart';
-import '../services/health_tip_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:mamaapp/models/mama_tip_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'health_tip_detail_screen.dart';
-import 'health_tip_category_screen.dart';
 import '../summary_screen.dart';
-import 'package:mamaapp/models/user_model.dart';
 import 'package:mamaapp/services/api_service.dart';
 
 class HealthTipsScreen extends StatefulWidget {
@@ -18,16 +19,16 @@ class HealthTipsScreen extends StatefulWidget {
 
 class _HealthTipsScreenState extends State<HealthTipsScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  final HealthTipService _healthTipService = HealthTipService();
   final ApiService _apiService = ApiService();
-  List<HealthTipCategory> _categories = [];
   bool _isLoading = true;
+  List<MamaTip> _tips = [];
+  String? _error;
   String _userName = '';
 
   @override
   void initState() {
     super.initState();
-    _loadCategories();
+    _loadTips();
     _loadUserData();
   }
 
@@ -44,39 +45,51 @@ class _HealthTipsScreenState extends State<HealthTipsScreen> {
     }
   }
 
-  Future<void> _loadCategories() async {
-    setState(() => _isLoading = true);
+  Future<void> _loadTips() async {
     try {
-      final categories = await _healthTipService.getCategories();
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      final baseUrl = dotenv.env['APP_BASE_URL'] ?? '';
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/mama-tips'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          _tips = (data['data'] as List)
+              .map((tip) => MamaTip.fromJson(tip))
+              .toList();
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _error = 'Failed to load tips';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
       setState(() {
-        _categories = categories;
+        _error = 'Error: $e';
         _isLoading = false;
       });
-    } catch (e) {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading health tips: $e')),
-        );
-      }
     }
   }
 
   Future<void> _navigateToSummaryScreen() async {
     try {
-      // Show loading indicator
       setState(() => _isLoading = true);
-      
-      // Get current user data
       final user = await _apiService.getUserData();
-      
-      // Hide loading indicator
       setState(() => _isLoading = false);
-      
+
       if (!mounted) return;
-      
+
       if (user != null && user.pregnancyData != null) {
-        // Navigate to summary screen with user's pregnancy data
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -86,18 +99,13 @@ class _HealthTipsScreenState extends State<HealthTipsScreen> {
           ),
         );
       } else {
-        // Show error message
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Unable to retrieve user data')),
         );
       }
     } catch (e) {
-      // Hide loading indicator
       setState(() => _isLoading = false);
-      
       if (!mounted) return;
-      
-      // Show error message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
       );
@@ -127,11 +135,13 @@ class _HealthTipsScreenState extends State<HealthTipsScreen> {
       ),
       drawer: const AppDrawer(),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFCB4172)))
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFFCB4172)))
           : SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Pink container with welcome message
                   Container(
                     decoration: const BoxDecoration(
                       color: Color(0xFFCB4172),
@@ -159,26 +169,30 @@ class _HealthTipsScreenState extends State<HealthTipsScreen> {
                       ],
                     ),
                   ),
-                  
-                  const SizedBox(height: 16),
-                  
-                  // Categories grid
+
+                  const SizedBox(height: 24),
+
+                  // Tips grid from API
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 24,
-                        childAspectRatio: 0.8,
-                      ),
-                      itemCount: _categories.length,
-                      itemBuilder: (context, index) {
-                        return _buildCategoryCard(_categories[index]);
-                      },
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _error != null
+                        ? Center(child: Text(_error!))
+                        : GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 3,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                              childAspectRatio: 0.75,
+                            ),
+                            itemCount: _tips.length,
+                            itemBuilder: (context, index) {
+                              final tip = _tips[index];
+                              return _buildTipCard(tip);
+                            },
+                          ),
                   ),
                 ],
               ),
@@ -226,9 +240,7 @@ class _HealthTipsScreenState extends State<HealthTipsScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => HealthTipDetailScreen(
-                      tipId: 1,
-                    ),
+                    builder: (context) => const HealthTipDetailScreen(tipId: 1),
                   ),
                 );
               },
@@ -250,7 +262,8 @@ class _HealthTipsScreenState extends State<HealthTipsScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(25),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               ),
             ),
           ),
@@ -259,72 +272,72 @@ class _HealthTipsScreenState extends State<HealthTipsScreen> {
     );
   }
 
-  Widget _buildCategoryCard(HealthTipCategory category) {
+  Widget _buildTipCard(MamaTip tip) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => HealthTipCategoryScreen(category: category),
+            builder: (context) => HealthTipDetailScreen(tipId: tip.id),
           ),
         );
       },
-      child: Column(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.asset(
-              category.iconPath,
-              width: 100,
-              height: 100,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    _getCategoryIcon(category.id),
-                    size: 40,
-                    color: const Color(0xFFCB4172),
-                  ),
-                );
-              },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 5,
+              offset: const Offset(0, 2),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            category.name,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(12),
+                  ),
+                  image: tip.image != null
+                      ? DecorationImage(
+                          image: NetworkImage(
+                              '${dotenv.env['APP_BASE_URL']}/${tip.image!}'),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                ),
+                child: tip.image == null
+                    ? const Center(
+                        child: Icon(
+                          Icons.health_and_safety,
+                          size: 40,
+                          color: Colors.grey,
+                        ),
+                      )
+                    : null,
+              ),
             ),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Text(
+                tip.name,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
-
-  IconData _getCategoryIcon(String categoryId) {
-    switch (categoryId) {
-      case 'postpartum-care':
-        return Icons.favorite;
-      case 'safe-exercises':
-        return Icons.fitness_center;
-      case 'nutrition-tips':
-        return Icons.restaurant;
-      case 'mom-guide':
-        return Icons.book;
-      case 'pregnancy-discomforts':
-        return Icons.pregnant_woman;
-      case 'birth-preps':
-        return Icons.child_care;
-      default:
-        return Icons.article;
-    }
-  }
-} 
+}
