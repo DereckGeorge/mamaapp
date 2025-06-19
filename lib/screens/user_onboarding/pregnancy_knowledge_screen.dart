@@ -52,13 +52,6 @@ class _PregnancyKnowledgeScreenState extends State<PregnancyKnowledgeScreen> {
           ageGroup: widget.ageGroup,
         );
         break;
-      case 'Expected due date':
-        nextScreen = PregnancyInfoScreen(
-          pregnancyData: updatedPregnancyData,
-          isFirstChild: widget.isFirstChild,
-          ageGroup: widget.ageGroup,
-        );
-        break;
       default:
         return; // Don't navigate if no valid option is selected
     }
@@ -120,11 +113,6 @@ class _PregnancyKnowledgeScreenState extends State<PregnancyKnowledgeScreen> {
                   _buildOptionButton(
                     'Gestational period',
                     isSelected: _selectedOption == 'Gestational period',
-                  ),
-                  const SizedBox(height: 16),
-                  _buildOptionButton(
-                    'Expected due date',
-                    isSelected: _selectedOption == 'Expected due date',
                   ),
                 ],
               ),

@@ -678,4 +678,54 @@ class ApiService {
       };
     }
   }
+
+  Future<void> requestPasswordReset(String email) async {
+    final url = Uri.parse('$baseUrl/api/auth/request-password-reset');
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'email': email}),
+      );
+      final responseData = json.decode(response.body);
+      if (response.statusCode == 200) {
+        // OTP sent successfully
+        return;
+      } else {
+        throw Exception(responseData['message'] ?? 'Failed to send OTP');
+      }
+    } catch (e) {
+      throw Exception('Failed to send OTP: ${e.toString()}');
+    }
+  }
+
+  Future<void> verifyOtpReset({
+    required String email,
+    required String otp,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    final url = Uri.parse('$baseUrl/api/auth/verify-otp-reset');
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'email': email,
+          'otp': otp,
+          'password': password,
+          'password_confirmation': passwordConfirmation,
+        }),
+      );
+      final responseData = json.decode(response.body);
+      if (response.statusCode == 200) {
+        // Password reset successful
+        return;
+      } else {
+        throw Exception(responseData['message'] ?? 'Failed to reset password');
+      }
+    } catch (e) {
+      throw Exception('Failed to reset password: ${e.toString()}');
+    }
+  }
 }

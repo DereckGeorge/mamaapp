@@ -7,6 +7,7 @@ import 'package:mamaapp/screens/user_onboarding/pregnancy_info_screen.dart';
 import 'package:mamaapp/models/user_model.dart';
 import 'package:mamaapp/screens/user_onboarding/first_child_screen.dart';
 import 'package:mamaapp/screens/user_onboarding/summary_screen.dart';
+import 'package:mamaapp/screens/forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -212,7 +213,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           alignment: Alignment.center,
                           child: TextButton(
                             onPressed: () {
-                              // TODO: Implement forgot password
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const ForgotPasswordScreen(),
+                                ),
+                              );
                             },
                             child: const Text(
                               'Forgot Password?',

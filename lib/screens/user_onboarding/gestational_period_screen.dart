@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:mamaapp/models/user_model.dart';
 import 'package:mamaapp/screens/user_onboarding/pregnancy_info_screen.dart';
-import 'package:mamaapp/screens/user_onboarding/expected_due_date_screen.dart';
 
 class GestationalPeriodScreen extends StatefulWidget {
   final UserPregnancyData pregnancyData;
@@ -48,7 +47,7 @@ class _GestationalPeriodScreenState extends State<GestationalPeriodScreen> {
 
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => ExpectedDueDateScreen(
+        builder: (context) => PregnancyInfoScreen(
           pregnancyData: updatedPregnancyData,
           isFirstChild: widget.isFirstChild,
           ageGroup: widget.ageGroup,
