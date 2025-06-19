@@ -8,6 +8,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mamaapp/models/query_log_model.dart';
 import 'dart:math';
+import '../widgets/app_drawer.dart';
 
 class AISymptomsScreen extends StatefulWidget {
   const AISymptomsScreen({super.key});
@@ -300,33 +301,29 @@ class _AISymptomsScreenState extends State<AISymptomsScreen> {
             fontWeight: FontWeight.w600,
           ),
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
       ),
+      drawer: const AppDrawer(),
       body: Column(
         children: [
-          if (_isLoadingHistory)
-            const Center(
-              child: CircularProgressIndicator(color: Color(0xFFCB4172)),
-            )
-          else
-            Expanded(
-              child: ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.all(16),
-                itemCount: _messages.length + (_isLoading ? 1 : 0),
-                itemBuilder: (context, index) {
-                  if (_isLoading && index == _messages.length) {
-                    return _buildTypingIndicator();
-                  }
-                  final message = _messages[index];
-                  final isUser = message["role"] == "user";
-                  return _buildMessageBubble(message["content"]!, isUser);
-                },
-              ),
-            ),
+          Expanded(
+            child: _isLoadingHistory
+                ? const Center(
+                    child: CircularProgressIndicator(color: Color(0xFFCB4172)),
+                  )
+                : ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _messages.length + (_isLoading ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (_isLoading && index == _messages.length) {
+                        return _buildTypingIndicator();
+                      }
+                      final message = _messages[index];
+                      final isUser = message["role"] == "user";
+                      return _buildMessageBubble(message["content"]!, isUser);
+                    },
+                  ),
+          ),
           _buildInputArea(),
         ],
       ),

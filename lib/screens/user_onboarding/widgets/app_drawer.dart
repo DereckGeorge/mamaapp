@@ -7,6 +7,7 @@ import '../screens/reminders_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/health_tips_screen.dart';
 import '../screens/symptoms_screen.dart';
+import '../screens/ai_symptoms_screen.dart';
 import 'package:http/http.dart' as http;
 
 class AppDrawer extends StatefulWidget {
@@ -206,18 +207,9 @@ class _AppDrawerState extends State<AppDrawer> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const SymptomsScreen(),
+                  builder: (context) => const AISymptomsScreen(),
                 ),
               );
-            },
-          ),
-          ListTile(
-            leading:
-                const Icon(Icons.settings_outlined, color: Color(0xFFCB4172)),
-            title: const Text('Settings'),
-            onTap: () {
-              Navigator.pop(context);
-              // Navigate to settings screen
             },
           ),
         ],

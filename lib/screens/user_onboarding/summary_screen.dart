@@ -10,6 +10,7 @@ import 'widgets/pregnancy_progress_card.dart';
 import 'widgets/feature_card.dart';
 import 'screens/reminders_screen.dart';
 import 'screens/health_progress_screen.dart';
+import 'screens/ai_symptoms_screen.dart';
 
 class SummaryScreen extends StatefulWidget {
   final UserPregnancyData pregnancyData;
@@ -146,7 +147,12 @@ class _SummaryScreenState extends State<SummaryScreen> {
                     iconPath: 'assets/symptoms_icon.png',
                     color: const Color(0xFFFFE6E6),
                     onTap: () {
-                      // Navigate to symptoms screen
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AISymptomsScreen(),
+                        ),
+                      );
                     },
                   ),
                   FeatureCard(

@@ -120,18 +120,6 @@ class _HealthTipsScreenState extends State<HealthTipsScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFFCB4172),
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: _navigateToSummaryScreen,
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search, color: Colors.white),
-            onPressed: () {
-              // Handle search
-            },
-          ),
-        ],
       ),
       drawer: const AppDrawer(),
       body: _isLoading
