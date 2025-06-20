@@ -54,7 +54,7 @@ class ApiService {
       print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
-        final responseData = json.decode(response.body);
+        final responseData = json.decode(utf8.decode(response.bodyBytes));
 
         // Save all the necessary data to SharedPreferences
         final prefs = await SharedPreferences.getInstance();
@@ -98,7 +98,7 @@ class ApiService {
         await _saveUserData();
         return _currentUser!;
       } else {
-        final errorData = json.decode(response.body);
+        final errorData = json.decode(utf8.decode(response.bodyBytes));
         throw Exception(errorData['message'] ?? 'Login failed');
       }
     } catch (e) {
@@ -142,7 +142,7 @@ class ApiService {
         print('Response status: ${response.statusCode}');
         print('Response body: ${response.body}');
 
-        final responseData = json.decode(response.body);
+        final responseData = json.decode(utf8.decode(response.bodyBytes));
 
         // Handle different response status codes
         switch (response.statusCode) {
@@ -355,7 +355,7 @@ class ApiService {
       );
 
       if (response.statusCode == 200) {
-        final userData = json.decode(response.body);
+        final userData = json.decode(utf8.decode(response.bodyBytes));
         _currentUser = User(
           id: userData['id'].toString(),
           name: userData['username'],
@@ -432,7 +432,7 @@ class ApiService {
       print('Response body: ${response.body}');
 
       if (response.statusCode != 201) {
-        final errorData = json.decode(response.body);
+        final errorData = json.decode(utf8.decode(response.bodyBytes));
         throw Exception(errorData['message'] ?? 'Failed to store mama data');
       }
     } catch (e) {
@@ -473,7 +473,7 @@ class ApiService {
       print('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        final data = json.decode(utf8.decode(response.bodyBytes));
         print('Parsed Response Data: $data');
         return {
           'text_response': data['text_response'] ?? 'No response available',
@@ -514,9 +514,15 @@ class ApiService {
       print('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        print('Parsed Response Data: $data');
-        return data.map((json) => QueryLog.fromJson(json)).toList();
+        final dynamic decodedData = json.decode(utf8.decode(response.bodyBytes));
+        if (decodedData is List) {
+          final List<QueryLog> history =
+              decodedData.map((json) => QueryLog.fromJson(json)).toList();
+          print('Parsed Response Data: $history');
+          return history;
+        } else {
+          throw Exception('Conversation history is not in the expected format.');
+        }
       } else {
         print('Error Response: ${response.body}');
         throw Exception(
@@ -552,7 +558,7 @@ class ApiService {
       print('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        final data = json.decode(utf8.decode(response.bodyBytes));
         return HealthAnalysis.fromJson(data);
       } else {
         throw Exception('Failed to analyze health: ${response.body}');
@@ -587,7 +593,7 @@ class ApiService {
       print('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
+        final data = json.decode(utf8.decode(response.bodyBytes));
 
         // Check if data is empty
         if (data.isEmpty) {
@@ -637,7 +643,7 @@ class ApiService {
       );
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        final data = json.decode(utf8.decode(response.bodyBytes));
         return data['audio_url'];
       } else {
         throw Exception('Failed to get audio summary: ${response.body}');
@@ -659,7 +665,7 @@ class ApiService {
       );
 
       if (response.statusCode == 200) {
-        return json.decode(response.body);
+        return json.decode(utf8.decode(response.bodyBytes));
       } else if (response.statusCode == 404) {
         return {
           'status': 'error',
@@ -687,7 +693,7 @@ class ApiService {
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'email': email}),
       );
-      final responseData = json.decode(response.body);
+      final responseData = json.decode(utf8.decode(response.bodyBytes));
       if (response.statusCode == 200) {
         // OTP sent successfully
         return;
@@ -717,7 +723,7 @@ class ApiService {
           'password_confirmation': passwordConfirmation,
         }),
       );
-      final responseData = json.decode(response.body);
+      final responseData = json.decode(utf8.decode(response.bodyBytes));
       if (response.statusCode == 200) {
         // Password reset successful
         return;

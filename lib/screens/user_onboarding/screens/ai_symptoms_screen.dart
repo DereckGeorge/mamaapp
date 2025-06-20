@@ -374,16 +374,39 @@ class _AISymptomsScreenState extends State<AISymptomsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SelectableText(
-                      message,
-                      style: TextStyle(
-                        color: isUser ? Colors.white : Colors.black87,
-                        fontSize: 16,
-                        height: 1.4,
-                        fontFamily: '.SF Pro Text',
-                        letterSpacing: 0.2,
-                      ),
-                    ),
+                    isUser
+                        ? SelectableText(
+                            message,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              height: 1.4,
+                              letterSpacing: 0.2,
+                            ),
+                          )
+                        : Markdown(
+                            data: message,
+                            selectable: true,
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            styleSheet: MarkdownStyleSheet(
+                              p: const TextStyle(
+                                color: Colors.black87,
+                                fontSize: 16,
+                                height: 1.4,
+                                letterSpacing: 0.2,
+                              ),
+                              strong: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                              listBullet: const TextStyle(
+                                color: Colors.black87,
+                                fontSize: 16,
+                                height: 1.4,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ),
                     const SizedBox(height: 4),
                     Text(
                       _formatTimestamp(message),
